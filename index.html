@@ -1,0 +1,1938 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>赵梦婷 - AI产品经理作品集</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="global-base.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: '#0a0a0a',
+                        'dark-lighter': '#111111',
+                        accent: '#a855f7',
+                        'accent-light': '#c084fc',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Fixed Side Navigation */
+        .side-nav {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: var(--width-side-nav);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: var(--z-nav);
+            padding: var(--space-gutter) 0;
+        }
+
+        .side-nav::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 1px;
+            height: 100%;
+            background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.1) 20%, rgba(255,255,255,0.1) 80%, transparent 100%);
+        }
+
+        .nav-dot {
+            width: clamp(0.4rem, 1.2vw, 0.5rem);
+            height: clamp(0.4rem, 1.2vw, 0.5rem);
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            margin: clamp(0.75rem, 2vh, 1rem) 0;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+
+        .nav-dot::after {
+            content: attr(data-label);
+            position: absolute;
+            left: clamp(1rem, 2.5vw, 1.25rem);
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: var(--font-nav-hint);
+            color: rgba(255,255,255,0.5);
+            white-space: nowrap;
+            opacity: 0;
+            transition: all 0.3s ease;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .nav-dot:hover::after,
+        .nav-dot.active::after {
+            opacity: 1;
+            left: clamp(1.1rem, 2.8vw, 1.5625rem);
+        }
+
+        .nav-dot:hover,
+        .nav-dot.active {
+            background: #a855f7;
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+        }
+
+        /* Top Logo Bar */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: var(--width-side-nav);
+            right: 0;
+            height: var(--height-top-bar);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 var(--space-section-x);
+            z-index: var(--z-nav);
+            background: linear-gradient(180deg, rgba(10, 10, 18, 0.92) 0%, transparent 100%);
+        }
+
+        .logo {
+            font-size: var(--font-logo);
+            font-weight: 600;
+            letter-spacing: clamp(0.15rem, 0.8vw, 0.25rem);
+            color: #fff;
+        }
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: clamp(0.75rem, 2vw, 1.5rem);
+        }
+
+        .lang-toggle {
+            font-size: clamp(0.6875rem, 1.8vw, 0.75rem);
+            color: rgba(255,255,255,0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: clamp(0.08rem, 0.5vw, 0.125rem);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: clamp(0.4rem, 1.2vw, 0.5rem) clamp(0.75rem, 2.5vw, 1rem);
+            border-radius: var(--radius-pill);
+        }
+
+        .lang-toggle:hover {
+            color: #fff;
+            border-color: #a855f7;
+            background: rgba(168, 85, 247, 0.1);
+        }
+
+        .contact-btn {
+            font-size: clamp(0.6875rem, 1.8vw, 0.75rem);
+            color: rgba(255,255,255,0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: clamp(0.08rem, 0.5vw, 0.125rem);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: clamp(0.4rem, 1.2vw, 0.5rem) clamp(0.75rem, 2.5vw, 1rem);
+            border-radius: var(--radius-pill);
+        }
+
+        .contact-btn:hover {
+            color: #fff;
+            border-color: #a855f7;
+            background: rgba(168, 85, 247, 0.1);
+        }
+
+        /* 联系卡片 */
+        .contact-card {
+            position: fixed;
+            top: var(--height-top-bar) + 1rem;
+            right: var(--space-section-x);
+            width: clamp(20rem, 80vw, 30rem);
+            background: rgba(10, 10, 18, 0.95);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: var(--radius-card);
+            padding: clamp(1.5rem, 4vw, 2rem);
+            z-index: 9999;
+            box-shadow: 0 0 30px rgba(168, 85, 247, 0.2);
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .contact-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .contact-card h3 {
+            font-size: var(--font-heading-3);
+            color: #fff;
+            margin-bottom: clamp(1rem, 3vw, 1.5rem);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .contact-card h3::before {
+            content: "📧";
+            font-size: 1.2em;
+        }
+
+        .contact-info {
+            margin-bottom: clamp(1.5rem, 4vw, 2rem);
+        }
+
+        .contact-info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: clamp(0.75rem, 2vw, 1rem);
+            color: rgba(255,255,255,0.8);
+        }
+
+        .contact-label {
+            color: #a855f7;
+            font-size: 1.2em;
+            width: 3em;
+            display: inline-block;
+            font-weight: 500;
+        }
+
+        .email-form {
+            margin-top: clamp(1.5rem, 4vw, 2rem);
+        }
+
+        .form-group {
+            margin-bottom: clamp(1rem, 3vw, 1.5rem);
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: rgba(255,255,255,0.8);
+            font-size: clamp(0.875rem, 2vw, 1rem);
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: clamp(0.75rem, 2vw, 1rem);
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: var(--radius);
+            color: #fff;
+            font-size: clamp(0.875rem, 2vw, 1rem);
+            resize: vertical;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #a855f7;
+            box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2);
+        }
+
+        .form-group textarea {
+            min-height: 10rem;
+        }
+
+        .send-btn {
+            width: 100%;
+            padding: clamp(0.75rem, 2vw, 1rem);
+            background: #a855f7;
+            border: none;
+            border-radius: var(--radius);
+            color: #fff;
+            font-size: clamp(0.875rem, 2vw, 1rem);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .send-btn:hover {
+            background: #9333ea;
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: clamp(0.75rem, 2vw, 1rem);
+            right: clamp(0.75rem, 2vw, 1rem);
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.5);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: #fff;
+        }
+
+        /* 鼠标水波纹效果 - 涟漪增强版 */
+        #ripple-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            /* 启用GPU加速 */
+            will-change: transform;
+            transform: translateZ(0);
+        }
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            /* 多层涟漪环效果 - 透明度x0.8 */
+            background: 
+                /* 最内层亮环 */
+                radial-gradient(circle at 30% 30%, rgba(220, 160, 255, 0.4) 0%, transparent 15%),
+                /* 第一圈波纹 */
+                radial-gradient(circle, 
+                    transparent 15%,
+                    rgba(168, 85, 247, 0.28) 18%,
+                    rgba(168, 85, 247, 0.2) 22%,
+                    transparent 26%),
+                /* 第二圈波纹 */
+                radial-gradient(circle, 
+                    transparent 35%,
+                    rgba(168, 85, 247, 0.16) 38%,
+                    rgba(168, 85, 247, 0.1) 42%,
+                    transparent 46%),
+                /* 第三圈波纹 */
+                radial-gradient(circle, 
+                    transparent 55%,
+                    rgba(168, 85, 247, 0.08) 58%,
+                    rgba(168, 85, 247, 0.04) 62%,
+                    transparent 66%),
+                /* 外圈淡晕 */
+                radial-gradient(circle, 
+                    rgba(168, 85, 247, 0.06) 0%, 
+                    transparent 70%);
+            transform: scale(0);
+            /* 涟漪扩散动画 */
+            animation: ripple-wave 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            pointer-events: none;
+            /* 启用GPU加速 */
+            will-change: transform, opacity;
+            transform: translateZ(0);
+        }
+
+        /* 波纹核心高亮层 - 增强发光效果 - 透明度x0.8 */
+        .ripple::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 25%;
+            height: 25%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            background: radial-gradient(circle, 
+                rgba(255, 200, 255, 0.72) 0%, 
+                rgba(220, 150, 255, 0.4) 30%,
+                transparent 70%);
+            box-shadow: 0 0 20px rgba(200, 130, 255, 0.48);
+            animation: ripple-glow 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        /* 涟漪扩散动画 - 多层波纹依次展开 - 透明度x0.8 */
+        @keyframes ripple-wave {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            5% {
+                opacity: 0.72;
+            }
+            15% {
+                opacity: 0.68;
+            }
+            30% {
+                opacity: 0.56;
+            }
+            50% {
+                opacity: 0.4;
+            }
+            70% {
+                opacity: 0.2;
+            }
+            100% {
+                transform: scale(6);
+                opacity: 0;
+            }
+        }
+
+        @keyframes ripple-glow {
+            0% {
+                transform: translate(-50%, -50%) scale(0.3);
+                opacity: 0.8;
+                box-shadow: 0 0 30px rgba(255, 200, 255, 0.64);
+            }
+            30% {
+                opacity: 0.56;
+                box-shadow: 0 0 15px rgba(220, 150, 255, 0.4);
+            }
+            60% {
+                opacity: 0.24;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1.5);
+                opacity: 0;
+                box-shadow: 0 0 0 rgba(200, 130, 255, 0);
+            }
+        }
+
+        /* Main Sections */
+        .section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0 var(--space-section-x) 0 var(--space-section-pl);
+            position: relative;
+        }
+
+        /* Hero Section - 核心 PORTFOLIO 区块在视口内双向居中 */
+        #home {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0 var(--space-section-x);
+        }
+
+        /* 动态PORTFOLIO样式 - 修复对齐问题 */
+        .align-box {
+            width: min(92vw, 1100px);
+            max-width: 100%;
+            position: relative;
+            flex-shrink: 0;
+            opacity: 0;
+            transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .align-box.visible {
+            opacity: 1;
+        }
+
+        .top {
+            text-align: justify;
+            font-size: clamp(0.7rem, 2.2vw, 1.4rem);
+            letter-spacing: clamp(0.3rem, 2vw, 1.3rem);
+            margin-bottom: clamp(1.5rem, 5vh, 3rem);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            /* 确保宽度与容器一致 */
+            width: 100%;
+        }
+        .top:hover {
+            color: #a855f7;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+        }
+        .top::after {
+            content: "";
+            display: inline-block;
+            width: 100%;
+        }
+
+        .middle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: clamp(7rem, 20vh, 15rem);
+            margin-bottom: clamp(1.5rem, 5vh, 3rem);
+            width: 100%;
+        }
+
+        .letter {
+            position: relative;
+            width: clamp(3rem, 9vw, 7rem);
+            height: clamp(7rem, 20vh, 15rem);
+            font-size: clamp(3rem, 11vw, 9rem);
+            font-weight: 100;
+            line-height: 1;
+            text-align: center;
+            color: transparent;
+        }
+
+        .letter-o {
+            position: relative;
+            width: clamp(4.2rem, 12.6vw, 10rem);
+            height: clamp(7rem, 20vh, 15rem);
+            font-size: clamp(4.2rem, 15vw, 14rem);
+            font-weight: 100;
+            line-height: 1;
+            text-align: center;
+            color: transparent;
+        }
+
+        .letter canvas,
+        .letter-o canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            filter: drop-shadow(0 0 3px rgba(180,100,255,0.5));
+        }
+
+        .bottom {
+            text-align: justify;
+            font-size: clamp(0.65rem, 2vw, 1.1rem);
+            letter-spacing: clamp(0.25rem, 1.8vw, 1rem);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            /* 确保宽度与容器一致 */
+            width: 100%;
+        }
+        .bottom:hover {
+            color: #a855f7;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+        }
+        .bottom::after {
+            content: "";
+            display: inline-block;
+            width: 100%;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 1200px) {
+            .align-box {
+                width: min(90vw, 900px);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .align-box {
+                width: min(95vw, 700px);
+            }
+            .top {
+                font-size: clamp(0.6rem, 2.5vw, 1rem);
+                letter-spacing: clamp(0.2rem, 1.5vw, 0.8rem);
+            }
+            .letter {
+                width: clamp(2.5rem, 8vw, 5rem);
+                font-size: clamp(2.5rem, 10vw, 7rem);
+            }
+            .letter-o {
+                width: clamp(3.5rem, 11vw, 7rem);
+                font-size: clamp(3.5rem, 13vw, 10rem);
+            }
+            .bottom {
+                font-size: clamp(0.55rem, 2.2vw, 0.9rem);
+                letter-spacing: clamp(0.15rem, 1.5vw, 0.7rem);
+            }
+        }
+
+        /* Section Labels */
+        .section-label {
+            font-size: var(--font-label);
+            letter-spacing: clamp(0.15rem, 0.6vw, 0.25rem);
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: clamp(2rem, 5vh, 3rem);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .section-label.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Project Cards */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: clamp(1.25rem, 3vw, 2rem);
+        }
+
+        @media (max-width: 1024px) {
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .project-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: var(--radius-card);
+            padding: clamp(1.5rem, 4vw, 2.5rem);
+            cursor: pointer;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 0;
+            transform: translateY(40px);
+        }
+
+        .project-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .project-card:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(168, 85, 247, 0.3);
+            transform: translateY(clamp(-0.35rem, -1vw, -0.5rem));
+        }
+
+        .project-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(0.6875rem, 1.6vw, 0.75rem);
+            color: rgba(255,255,255,0.3);
+            margin-bottom: 1.5rem;
+        }
+
+        .project-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            line-height: 1.4;
+        }
+
+        .project-desc {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.5);
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .project-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .project-tag {
+            font-size: var(--font-label);
+            padding: clamp(0.3rem, 1vw, 0.375rem) clamp(0.6rem, 2vw, 0.75rem);
+            background: rgba(255,255,255,0.05);
+            border-radius: var(--radius-pill);
+            color: rgba(255,255,255,0.6);
+            transition: all 0.3s ease;
+        }
+
+        .project-card:hover .project-tag {
+            background: rgba(168, 85, 247, 0.15);
+            color: rgba(168, 85, 247, 0.9);
+        }
+
+        /* About Section */
+        .about-content {
+            width: 100%;
+            max-width: min(95vw, 90rem);
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-card);
+            padding: clamp(2rem, 5vw, 3rem);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .about-text {
+            font-size: 1.25rem;
+            color: rgba(255,255,255,0.7);
+            line-height: 2;
+            margin-bottom: 3rem;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .about-text.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .experience-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-card);
+            padding: clamp(1.5rem, 4vw, 2rem);
+            margin-bottom: clamp(1.5rem, 4vw, 2rem);
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .experience-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(168, 85, 247, 0.3);
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 8px 24px rgba(168, 85, 247, 0.15);
+        }
+
+        .experience-item.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 分层级效果 */
+        .experience-item:nth-child(odd) {
+            margin-left: 3%;
+            z-index: 1;
+        }
+
+        .experience-item:nth-child(even) {
+            margin-right: 3%;
+            z-index: 2;
+        }
+
+        .experience-item:nth-child(1) {
+            transition-delay: 0.1s;
+        }
+
+        .experience-item:nth-child(2) {
+            transition-delay: 0.2s;
+        }
+
+        .experience-item:nth-child(3) {
+            transition-delay: 0.3s;
+        }
+
+        .experience-item:nth-child(4) {
+            transition-delay: 0.4s;
+        }
+
+        .experience-item:nth-child(5) {
+            transition-delay: 0.5s;
+        }
+
+        .exp-date {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(0.6875rem, 1.6vw, 0.75rem);
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 0.5rem;
+        }
+
+        .exp-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .exp-desc {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.5);
+            line-height: 1.7;
+        }
+
+        /* Skills */
+        .skills-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .skill-item {
+            font-size: clamp(0.75rem, 1.8vw, 0.8125rem);
+            padding: clamp(0.45rem, 1.5vw, 0.625rem) clamp(0.9rem, 3vw, 1.25rem);
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: var(--radius-pill);
+            color: rgba(255,255,255,0.7);
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: scale(0.9);
+        }
+
+        .skill-item.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .skill-item:hover {
+            border-color: #a855f7;
+            color: #a855f7;
+            background: rgba(168, 85, 247, 0.05);
+        }
+
+        /* Footer */
+        .footer {
+            padding: var(--space-footer-y) var(--space-section-x) var(--space-footer-y) var(--space-section-pl);
+        }
+
+        @media (max-width: 1024px) {
+            .footer {
+                padding: var(--space-gutter);
+            }
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .footer-left {
+            font-size: clamp(0.8125rem, 2vw, 0.875rem);
+            color: rgba(255,255,255,0.5);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-left .divider {
+            opacity: 0.3;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .footer-link {
+            font-size: clamp(0.75rem, 1.8vw, 0.8125rem);
+            color: rgba(255,255,255,0.5);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .footer-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: #a855f7;
+            transition: width 0.3s ease;
+        }
+
+        .footer-link:hover {
+            color: #fff;
+        }
+
+        .footer-link:hover::after {
+            width: 100%;
+        }
+
+        /* Scroll Indicator */
+        .scroll-indicator {
+            position: fixed;
+            bottom: clamp(1.5rem, 5vh, 3rem);
+            right: clamp(1.5rem, 5vw, 3rem);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            color: rgba(255,255,255,0.3);
+            font-size: var(--font-label);
+            letter-spacing: clamp(0.08rem, 0.5vw, 0.125rem);
+            z-index: var(--z-scroll-hint);
+            pointer-events: none;
+        }
+
+        .scroll-line {
+            width: 1px;
+            height: clamp(2.5rem, 10vh, 3.75rem);
+            background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 100%);
+            animation: scrollPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes scrollPulse {
+            0%, 100% { opacity: 0.3; transform: scaleY(1); }
+            50% { opacity: 0.8; transform: scaleY(1.2); }
+        }
+
+        @media (max-width: 1024px) {
+            .side-nav {
+                display: none;
+            }
+            
+            .top-bar {
+                left: 0;
+                padding: 0 var(--space-gutter);
+            }
+            
+            .section {
+                padding: 0 var(--space-gutter);
+            }
+            
+            .scroll-indicator {
+                display: none;
+            }
+        }
+
+        /* Mobile Menu */
+        .mobile-menu-btn {
+            display: none;
+            font-size: 1.5rem;
+            color: #fff;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        @media (max-width: 1024px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+        }
+
+        .mobile-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(10, 10, 18, 0.98);
+            z-index: var(--z-overlay);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .mobile-nav.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .mobile-nav a {
+            font-size: 2rem;
+            color: #fff;
+            text-decoration: none;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .mobile-nav.active a {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .mobile-nav a:nth-child(2) { transition-delay: 0.1s; }
+        .mobile-nav a:nth-child(3) { transition-delay: 0.2s; }
+        .mobile-nav a:nth-child(4) { transition-delay: 0.3s; }
+        .mobile-nav a:nth-child(5) { transition-delay: 0.4s; }
+
+        .mobile-nav-close {
+            position: absolute;
+            top: var(--space-gutter);
+            right: var(--space-gutter);
+            font-size: 2rem;
+            color: #fff;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        #rain-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
+            pointer-events: none;
+            z-index: 1;
+            transition: background 0.5s ease;
+        }
+
+        #about-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0);
+            pointer-events: none;
+            z-index: 1;
+            transition: background-color 0.5s ease;
+        }
+
+        #tooltip {
+            position: absolute;
+            background-color: rgba(0, 20, 40, 0.9);
+            border: 1px solid #ff6600;
+            border-radius: 8px;
+            padding: 15px;
+            color: #ffffff;
+            font-family: sans-serif;
+            font-size: 14px;
+            max-width: 300px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            box-shadow: 0 0 20px rgba(255, 102, 0, 0.3);
+        }
+        #tooltip h3 {
+            margin: 0 0 10px 0;
+            color: #ff6600;
+            font-size: 16px;
+        }
+        #tooltip p {
+            margin: 5px 0;
+            color: #cccccc;
+        }
+    </style>
+</head>
+<body>
+    <span id="rain-font-probe" aria-hidden="true">M</span>
+    <canvas id="ascii-canvas" aria-hidden="true"></canvas>
+    <div id="rain-overlay"></div>
+    <div id="about-overlay"></div>
+    <div id="tooltip"></div>
+    <!-- 鼠标水波纹效果 -->
+    <div id="ripple-container"></div>
+
+    <!-- Side Navigation -->
+    <nav class="side-nav">
+        <div class="nav-dot active" data-section="home" data-label="Home" data-label-zh="首页" data-label-en="Home"></div>
+        <div class="nav-dot" data-section="projects" data-label="Projects" data-label-zh="作品" data-label-en="Projects"></div>
+        <div class="nav-dot" data-section="about" data-label="About" data-label-zh="关于" data-label-en="About"></div>
+        <div class="nav-dot" data-section="contact" data-label="Contact" data-label-zh="联系" data-label-en="Contact"></div>
+    </nav>
+
+    <!-- Top Bar -->
+    <header class="top-bar">
+        <div class="logo">ZMT</div>
+        <div class="flex items-center gap-4">
+            <a href="赵梦婷AI产品助理简历.pdf" download="赵梦婷-AI产品助理简历.pdf" class="resume-download">
+                <span class="lang-toggle" data-lang="download_resume">下载简历</span>
+            </a>
+            <span class="contact-btn" data-lang="contact_me">联系我</span>
+            <span class="lang-toggle" id="langToggle">EN</span>
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <i class="fa fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- 联系卡片 -->
+    <div class="contact-card" id="contactCard">
+        <button class="close-btn">&times;</button>
+        <h3 data-lang="contact_title">联系方式</h3>
+        <div class="contact-info">
+            <div class="contact-info-item">
+                <span class="contact-label" data-lang="contact_phone_label">电话：</span>
+                <span>187-2530-3017</span>
+            </div>
+            <div class="contact-info-item">
+                <span class="contact-label" data-lang="contact_email_label">邮箱：</span>
+                <span>mengtingthea@163.com</span>
+            </div>
+        </div>
+        <form class="email-form">
+            <div class="form-group">
+                <label for="name" data-lang="contact_name_label">姓名</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="email" data-lang="contact_email_input_label">邮箱</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="message" data-lang="contact_message_label">留言</label>
+                <textarea id="message" name="message" required></textarea>
+            </div>
+            <button type="submit" class="send-btn" data-lang="contact_send_btn">发送邮件</button>
+        </form>
+    </div>
+
+    <!-- Mobile Navigation -->
+    <nav class="mobile-nav" id="mobileNav">
+        <button class="mobile-nav-close" id="mobileNavClose">
+            <i class="fa fa-times"></i>
+        </button>
+        <a href="#home" data-lang="home">首页</a>
+        <a href="#projects" data-lang="projects">作品</a>
+        <a href="#about" data-lang="about">关于我</a>
+        <a href="#contact" data-lang="contact">联系方式</a>
+    </nav>
+
+    <!-- Scroll Indicator -->
+    <div class="scroll-indicator">
+        <span data-lang="scroll_text">SCROLL</span>
+        <div class="scroll-line"></div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="content-layer">
+        <!-- Hero Section - 替换为动态PORTFOLIO -->
+        <section id="home" class="section">
+            <!-- 动态PORTFOLIO代码块（原封不动从LOGO.html移植） -->
+            <div class="align-box">
+              <div class="top">ARTIFICIAL INTELLIGENCE</div>
+
+              <div class="middle">
+                <div class="letter">P</div>
+                <div class="letter-o">O</div>
+                <div class="letter">R</div>
+                <div class="letter">T</div>
+                <div class="letter">F</div>
+                <div class="letter-o">O</div>
+                <div class="letter">L</div>
+                <div class="letter">I</div>
+                <div class="letter-o">O</div>
+              </div>
+
+              <div class="bottom">赵梦婷 2025 —— 至今 作品集</div>
+            </div>
+        </section>
+
+        <!-- Projects Section -->
+        <section id="projects" class="section" style="min-height: 200vh;">
+            <div style="width: 100%; height: 100vh; position: relative;">
+                <iframe src="作品展示.html" style="width: 100%; height: 100%; border: none;" frameborder="0"></iframe>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="section" style="min-height: 100vh;">
+            <div style="width: 100%; height: 100vh; position: relative;">
+                <iframe src="about.html" style="width: 100%; height: 100%; border: none;" frameborder="0"></iframe>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer" id="contact">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <span data-lang="footer_name">赵梦婷</span>
+                    <span class="divider">|</span>
+                    <span data-lang="footer_job">求职意向：AI 产品助理 / AI 售前顾问</span>
+                </div>
+                <div class="footer-links">
+                    <a href="mailto:mengtingthea@163.com" class="footer-link" data-lang="footer_email">邮箱：mengtingthea@163.com</a>
+                    <a href="tel:18725303017" class="footer-link" data-lang="footer_phone">电话：187-2530-3017</a>
+                    <span class="footer-link" data-lang="footer_location">上海</span>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <script>
+        // ========== Language Data ==========
+        const langData = {
+            zh: {
+                home: '首页',
+                projects: '作品',
+                about: '关于我',
+                contact: '联系方式',
+                project_label: 'Selected Works',
+                p1_name: 'AI 提示词优化 Agent',
+                p1_desc: '基于Coze扣子平台搭建，实现提示词自动优化、指令结构化、输出可控化，提升AI输出准确率60%以上',
+                p2_name: '人格复刻 AI 陪伴',
+                p2_desc: '独立规划AI陪伴交互逻辑、人设体系、对话流程与产品体验，打造可演示的高保真AI产品Demo',
+                p3_name: 'AI 需求分析工作流',
+                p3_desc: '自动化拆解产品需求、输出PRD结构、生成开发任务清单，提升产品需求输出效率40%',
+                about_label: 'About Me',
+                about_text: '我是一名AI产品经理，专注于将前沿AI技术转化为用户喜爱的产品。我熟练掌握Coze扣子平台，能够独立完成Agent开发、提示词优化和工作流设计。我相信好的AI产品应该让用户感受不到技术的存在，只体验到价值的传递。',
+                job1_name: '猎头岗位',
+                job1_desc: '负责人才寻访、需求对接、沟通协调，具备良好的需求理解与 stakeholder 沟通能力',
+                job2_name: '建筑相关岗位',
+                job2_desc: '负责项目执行、方案设计、客户对接、数据整理与文档输出，具备较强的逻辑思维、执行力与跨部门沟通能力',
+                footer_name: '赵梦婷',
+                footer_job: '求职意向：AI 产品助理 / AI 售前顾问',
+                footer_email: '邮箱：mengtingthea@163.com',
+                footer_phone: '电话：187-2530-3017',
+                footer_location: '上海',
+                download_resume: '下载简历',
+                contact_me: '联系我',
+                scroll_text: '滚动',
+                contact_title: '联系方式',
+                contact_phone_label: '电话：',
+                contact_email_label: '邮箱：',
+                contact_name_label: '姓名',
+                contact_email_input_label: '邮箱',
+                contact_message_label: '留言',
+                contact_send_btn: '发送邮件'
+            },
+            en: {
+                home: 'Home',
+                projects: 'Projects',
+                about: 'About',
+                contact: 'Contact',
+                project_label: 'Selected Works',
+                p1_name: 'AI Prompt Optimization Agent',
+                p1_desc: 'Built on Coze platform, achieving automatic prompt optimization and controllable output, improving AI accuracy by 60%+',
+                p2_name: 'AI Personality Companion',
+                p2_desc: 'Independently planned AI companion interaction logic and character system, creating a high-fidelity product demo',
+                p3_name: 'AI Requirements Workflow',
+                p3_desc: 'Automatically decomposes product requirements and generates PRD structure, improving efficiency by 40%',
+                about_label: 'About Me',
+                about_text: 'I am an AI Product Manager focused on transforming cutting-edge AI technology into user-loved products. I am proficient in the Coze platform and can independently complete Agent development, prompt optimization, and workflow design.',
+                job1_name: 'Headhunting Position',
+                job1_desc: 'Responsible for talent sourcing and requirement coordination, with good stakeholder communication skills',
+                job2_name: 'Construction Position',
+                job2_desc: 'Responsible for project execution and solution design, with strong logical thinking and execution ability',
+                footer_name: 'Mengting Zhao',
+                footer_job: 'Job: AI Product Assistant / AI Pre-sales Consultant',
+                footer_email: 'Email: mengtingthea@163.com',
+                footer_phone: 'Tel: 187-2530-3017',
+                footer_location: 'Shanghai',
+                download_resume: 'Download Resume',
+                contact_me: 'Contact Me',
+                scroll_text: 'SCROLL',
+                contact_title: 'Contact',
+                contact_phone_label: 'Tel: ',
+                contact_email_label: 'Email: ',
+                contact_name_label: 'Name',
+                contact_email_input_label: 'Email',
+                contact_message_label: 'Message',
+                contact_send_btn: 'Send Email'
+            }
+        };
+
+        // ========== Language Toggle ==========
+        let currentLang = 'zh';
+        const langToggle = document.getElementById('langToggle');
+
+        // 向所有iframe子页面广播语言切换消息
+        function broadcastLanguageChange(lang) {
+            const iframes = document.querySelectorAll('iframe');
+            iframes.forEach(iframe => {
+                if (iframe.contentWindow) {
+                    try {
+                        iframe.contentWindow.postMessage({ type: 'languageChange', lang: lang }, '*');
+                    } catch (e) {
+                        console.warn('无法向iframe发送语言切换消息:', e);
+                    }
+                }
+            });
+        }
+
+        langToggle.addEventListener('click', () => {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            langToggle.textContent = currentLang === 'zh' ? 'EN' : '中文';
+            updateLanguage();
+            
+            // 向所有iframe发送语言变化消息
+            broadcastLanguageChange(currentLang);
+        });
+
+        function updateLanguage() {
+            // 更新所有带 data-lang 的元素
+            document.querySelectorAll('[data-lang]').forEach(el => {
+                const key = el.getAttribute('data-lang');
+                if (langData[currentLang][key]) {
+                    el.textContent = langData[currentLang][key];
+                }
+            });
+            
+            // 更新侧边导航的 data-label
+            document.querySelectorAll('.nav-dot').forEach(dot => {
+                const labelKey = 'data-label-' + currentLang;
+                if (dot.hasAttribute(labelKey)) {
+                    dot.setAttribute('data-label', dot.getAttribute(labelKey));
+                }
+            });
+        }
+
+        // ========== 联系卡片功能 ==========
+        const contactBtn = document.querySelector('.contact-btn');
+        const contactCard = document.getElementById('contactCard');
+        const closeBtn = document.querySelector('.close-btn');
+        const emailForm = document.querySelector('.email-form');
+
+        // 显示联系卡片
+        contactBtn.addEventListener('click', () => {
+            contactCard.classList.add('visible');
+        });
+
+        // 隐藏联系卡片
+        closeBtn.addEventListener('click', () => {
+            contactCard.classList.remove('visible');
+        });
+
+        // 点击卡片外区域关闭卡片
+        document.addEventListener('click', (e) => {
+            if (!contactCard.contains(e.target) && e.target !== contactBtn) {
+                contactCard.classList.remove('visible');
+            }
+        });
+
+        // 邮件发送功能
+        emailForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const message = document.getElementById('message').value;
+            
+            // 构建邮件链接
+            const mailtoLink = `mailto:mengtingthea@163.com?subject=来自${name}的留言&body=${encodeURIComponent(message)}\n\n联系邮箱：${email}`;
+            
+            // 打开邮件客户端
+            window.location.href = mailtoLink;
+        });
+
+        // 鼠标水波纹效果 - 优化版
+        const rippleContainer = document.getElementById('ripple-container');
+        
+        // 配置参数
+        const RIPPLE_CONFIG = {
+            minInterval: 30,        // 最小生成间隔(毫秒)，支持快速连续触发
+            baseSize: 40,           // 基础波纹大小
+            sizeVariation: 15,      // 大小变化范围
+            maxRipples: 15,         // 最大同时存在的波纹数量
+            fadeOutDuration: 1200   // 淡出持续时间
+        };
+        
+        let lastRippleTime = 0;
+        let activeRipples = 0;
+        
+        // 对象池用于复用DOM元素，减少GC压力
+        const ripplePool = [];
+        
+        // 获取或创建波纹元素
+        function getRippleElement() {
+            if (ripplePool.length > 0) {
+                return ripplePool.pop();
+            }
+            return document.createElement('div');
+        }
+        
+        // 回收波纹元素到对象池
+        function recycleRippleElement(el) {
+            if (ripplePool.length < RIPPLE_CONFIG.maxRipples) {
+                el.className = '';
+                el.style.cssText = '';
+                ripplePool.push(el);
+            }
+        }
+        
+        // 创建单个波纹
+        function createSingleRipple(x, y, size, delay = 0, duration = 1500, isSecondary = false) {
+            setTimeout(() => {
+                if (activeRipples >= RIPPLE_CONFIG.maxRipples) return;
+                
+                activeRipples++;
+                const ripple = getRippleElement();
+                ripple.classList.add('ripple');
+                
+                // 设置位置和大小
+                ripple.style.width = `${size}px`;
+                ripple.style.height = `${size}px`;
+                ripple.style.left = `${x - size / 2}px`;
+                ripple.style.top = `${y - size / 2}px`;
+                ripple.style.animationDuration = `${duration}ms`;
+                
+                // 次级波纹透明度降低
+                if (isSecondary) {
+                    ripple.style.opacity = '0.6';
+                }
+                
+                rippleContainer.appendChild(ripple);
+                
+                // 动画结束后清理
+                setTimeout(() => {
+                    if (ripple.parentNode) {
+                        ripple.remove();
+                    }
+                    recycleRippleElement(ripple);
+                    activeRipples--;
+                }, duration);
+            }, delay);
+        }
+        
+        // 创建波纹的核心函数 - 支持多层涟漪
+        function createRipple(x, y, isClick = false) {
+            const now = Date.now();
+            
+            // 检查生成间隔，但点击事件不受限制
+            if (!isClick && now - lastRippleTime < RIPPLE_CONFIG.minInterval) {
+                return;
+            }
+            
+            lastRippleTime = now;
+            
+            if (isClick) {
+                // 点击时创建多层涟漪效果
+                const baseSize = RIPPLE_CONFIG.baseSize + 30;
+                
+                // 主波纹
+                createSingleRipple(x, y, baseSize, 0, 1800, false);
+                
+                // 次级波纹 - 延迟产生涟漪感
+                createSingleRipple(x, y, baseSize * 0.8, 150, 1600, true);
+                createSingleRipple(x, y, baseSize * 0.6, 300, 1400, true);
+                
+            } else {
+                // 鼠标移动时创建单层波纹
+                const sizeVariation = Math.random() * RIPPLE_CONFIG.sizeVariation;
+                const size = RIPPLE_CONFIG.baseSize + sizeVariation;
+                createSingleRipple(x, y, size, 0, 1500, false);
+            }
+        }
+        
+        // 鼠标移动时生成波纹（节流）
+        let mouseMoveScheduled = false;
+        document.addEventListener('mousemove', (e) => {
+            if (!mouseMoveScheduled) {
+                mouseMoveScheduled = true;
+                requestAnimationFrame(() => {
+                    createRipple(e.clientX, e.clientY, false);
+                    mouseMoveScheduled = false;
+                });
+            }
+        }, { passive: true });
+        
+        // 点击时立即生成波纹（多层涟漪）
+        document.addEventListener('click', (e) => {
+            // 排除按钮和链接点击
+            if (e.target.closest('button, a, .nav-dot, .contact-btn, .lang-toggle')) {
+                return;
+            }
+            createRipple(e.clientX, e.clientY, true);
+        });
+        
+        // 触摸设备支持
+        document.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            createRipple(touch.clientX, touch.clientY, true);
+        }, { passive: true });
+
+        // ========== 数字雨 Canvas（global-base：clamp 字号、1.4×列距、rAF、可视裁剪） ==========
+        const canvas = document.getElementById('ascii-canvas');
+        const ctx = canvas.getContext('2d');
+        const rainProbe = document.getElementById('rain-font-probe');
+        const chars = '·+=-:;zycba!?0123456789';
+        const RAIN_COL_RATIO = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--rain-col-gap-ratio')) || 1.2;
+        const RAIN_TARGET_FPS = 32;
+        const RAIN_FRAME_MS = 1000 / RAIN_TARGET_FPS;
+
+        let fontSize = 18;
+        let colSpacing = 25.2;
+        let columns, rows;
+        let drops = [];
+        let scrollProgress = 0;
+        let rainRafId = 0;
+        let rainRunning = false;
+        let lastRainTick = 0;
+
+        // ========== 与作品 iframe 通信：根据全局滚动驱动模型缩放 ==========
+        // 目标：在 projects 区域内，滚动位置 0% / 100% 时模型为 0.5 倍，中间“完全展示”位置约 50% 时为 1.5 倍
+        function postProjectsScrollScale() {
+            const sec = document.getElementById('projects');
+            const frame = document.querySelector('iframe[src="作品展示.html"]');
+            if (!sec || !frame || !frame.contentWindow) return;
+
+            const sectionTop = sec.offsetTop;
+            const sectionHeight = sec.clientHeight || 1;
+            const scrollY = window.scrollY || window.pageYOffset || 0;
+
+            // 归一化滚动进度：0 = 刚进入第二页顶部，1 = 即将离开第二页底部
+            const rawProgress = (scrollY - sectionTop) / sectionHeight;
+            const progress = Math.min(1, Math.max(0, rawProgress));
+
+            // 做一个“山峰型”曲线：两端 0.5，中间 1.5
+            const peak = 0.2;
+            const t = 1 - Math.min(1, Math.abs(progress - peak) / peak); // 0..1
+            const minScale = 0.5;
+            const maxScale = 1.2;
+            const scale = minScale + t * (maxScale - minScale);
+
+            frame.contentWindow.postMessage({
+                type: 'scrollScale',
+                scale
+            }, '*');
+        }
+
+        function updateRainMetrics() {
+            if (!rainProbe) return;
+            const fs = parseFloat(getComputedStyle(rainProbe).fontSize);
+            if (!Number.isFinite(fs) || fs < 1) return;
+            fontSize = fs;
+            colSpacing = fontSize * RAIN_COL_RATIO * 2 * 0.7 * 0.8; // 密度x0.5，即间距翻倍，再乘以0.7，再乘以0.8
+        }
+
+        function resizeCanvas() {
+            updateRainMetrics();
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            canvas.width = w;
+            canvas.height = h;
+            columns = Math.max(0, Math.floor(w / colSpacing));
+            rows = Math.max(1, Math.floor(h / fontSize));
+
+            drops = [];
+            for (let i = 0; i < columns; i++) {
+                // 增加1.5倍的随机度，使滴入位置更加分散
+                drops[i] = (Math.random() * 1.5) * rows;
+            }
+        }
+
+        function drawASCII() {
+            const W = canvas.width;
+            const H = canvas.height;
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)'; // 黑色背景
+            ctx.fillRect(0, 0, W, H);
+
+            ctx.font = `${fontSize}px 'JetBrains Mono', monospace`;
+            const trailLen = Math.min(28, Math.max(8, Math.floor(rows * 0.2)));
+
+            for (let i = 0; i < drops.length; i++) {
+                const x = i * colSpacing;
+                if (x < -colSpacing || x > W + colSpacing) continue;
+
+                const h = drops[i];
+                const floorH = Math.floor(h);
+                const fractionalH = h - floorH;
+                const hueBase = 270 + (scrollProgress * 60) + (i / Math.max(1, drops.length)) * 30;
+
+                // 只绘制雨滴当前位置及其上方的轨道，确保轨道只在雨滴经过时显示
+                for (let off = 0; off < trailLen; off += 8) { // 密度x0.5，跳过7/8的字符
+                    const row = floorH - off;
+                    // 确保只有当雨滴实际经过时才显示轨道
+                    if (row < 0) continue;
+                    const y = row * fontSize;
+                    if (y < -fontSize || y > H + fontSize) continue;
+
+                    const vf = Math.min(1, Math.max(0, y / Math.max(1, H)));
+                    const topBright = 1 - vf;
+
+                    // 计算滴入和滴出的渐变效果
+                    let fadeFactor = 1;
+                    
+                    // 滴入效果：当雨滴刚从顶部开始时，逐渐增加透明度
+                    if (floorH < trailLen) {
+                        fadeFactor = floorH / trailLen;
+                    }
+                    
+                    // 滴出效果：当雨滴接近底部时，逐渐减少透明度
+                    const bottomDistance = H - y;
+                    if (bottomDistance < trailLen * fontSize) {
+                        fadeFactor = Math.min(fadeFactor, bottomDistance / (trailLen * fontSize));
+                    }
+
+                    const char = chars[Math.floor(Math.random() * chars.length)];
+
+                    if (topBright > 0.55) {
+                        const a = (0.35 + topBright * 0.55) * fadeFactor * 0.9; // 透明度×0.9
+                        const brightnessIncrease = 1.1; // 亮度提高10%
+                        ctx.fillStyle = `rgba(242, 165, 280, ${Math.min(0.855, a + Math.random() * 0.072)})`; // 透明度×0.9，亮度提高10%
+                        ctx.shadowColor = 'rgba(220, 150, 255, 0.5)'; // 添加发光效果
+                        ctx.shadowBlur = 5; // 发光模糊半径
+                    } else {
+                        const depth = 1 - topBright;
+                        const L = (30 + topBright * 22) * 1.1; // 亮度提高10%
+                        const alpha = (0.12 + topBright * 0.42 + (1 - depth) * 0.08) * fadeFactor * 0.9; // 透明度×0.9
+                        ctx.fillStyle = `hsla(${hueBase}, 86%, ${Math.min(100, L)}%, ${Math.min(0.702, alpha + Math.random() * 0.108)})`; // 透明度×0.9
+                        ctx.shadowColor = `hsla(${hueBase}, 86%, ${Math.min(100, L)}%, 0.3)`; // 添加发光效果
+                        ctx.shadowBlur = 3; // 发光模糊半径
+                    }
+                    ctx.fillText(char, x, y);
+                    ctx.shadowColor = 'transparent'; // 清除阴影效果
+                    ctx.shadowBlur = 0; // 清除阴影模糊
+                }
+
+                const headY = h * fontSize;
+                if (headY > H && Math.random() > 0.975) {
+                    // 重置时也使用增加1.5倍随机度的逻辑
+                    drops[i] = (Math.random() * 1.5) * rows;
+                }
+                drops[i] += 0.6; // 流速加快1.2倍（从0.5变为0.6）
+            }
+        }
+
+        function rainTick(t) {
+            if (!rainRunning) return;
+            if (document.hidden) return;
+            if (t - lastRainTick >= RAIN_FRAME_MS) {
+                lastRainTick = t;
+                drawASCII();
+            }
+            rainRafId = requestAnimationFrame(rainTick);
+        }
+
+        function startRainLoop() {
+            if (rainRunning) return;
+            rainRunning = true;
+            lastRainTick = performance.now();
+            rainRafId = requestAnimationFrame(rainTick);
+        }
+
+        function stopRainLoop() {
+            rainRunning = false;
+            cancelAnimationFrame(rainRafId);
+        }
+
+        function scheduleRainBootstrap() {
+            const boot = () => {
+                resizeCanvas();
+                startRainLoop();
+            };
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(boot, { timeout: 900 });
+            } else {
+                setTimeout(boot, 280);
+            }
+        }
+
+        // ========== Scroll Animations ==========
+        function initScrollAnimations() {
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -10% 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, observerOptions);
+
+            // Observe all animated elements（新增align-box的观测）
+            document.querySelectorAll('.align-box, .section-label, .project-card, .about-text, .experience-item, .skill-item').forEach(el => {
+                observer.observe(el);
+            });
+
+            // Stagger project cards
+            document.querySelectorAll('.project-card').forEach((card, index) => {
+                card.style.transitionDelay = `${index * 0.15}s`;
+            });
+
+            // Stagger skill items
+            document.querySelectorAll('.skill-item').forEach((item, index) => {
+                item.style.transitionDelay = `${index * 0.05}s`;
+            });
+        }
+
+        // ========== Side Navigation ==========
+        function initSideNav() {
+            const navDots = document.querySelectorAll('.nav-dot');
+            const sections = document.querySelectorAll('.section, .footer');
+
+            navDots.forEach(dot => {
+                dot.addEventListener('click', () => {
+                    const sectionId = dot.getAttribute('data-section');
+                    const section = document.getElementById(sectionId);
+                    if (section) {
+                        section.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+
+            // Update active nav on scroll
+            const rainOverlay = document.getElementById('rain-overlay');
+            window.addEventListener('scroll', () => {
+                // 根据全局滚动位置驱动作品 iframe 中模型缩放
+                postProjectsScrollScale();
+
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    const sectionHeight = section.clientHeight;
+                    if (window.scrollY >= sectionTop - sectionHeight / 3) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navDots.forEach(dot => {
+                    dot.classList.remove('active');
+                    if (dot.getAttribute('data-section') === current) {
+                        dot.classList.add('active');
+                    }
+                });
+
+                // Control rain overlay for second page (projects)
+                if (current === 'projects') {
+                    rainOverlay.style.background = 'radial-gradient(circle at center, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%)';
+                } else {
+                    rainOverlay.style.background = 'radial-gradient(circle at center, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 100%)';
+                }
+                
+                // Control about overlay for about and footer sections
+                const aboutOverlay = document.getElementById('about-overlay');
+                if (current === 'about' || current === 'contact') {
+                    // Calculate scroll position within about and footer
+                    const aboutSection = document.getElementById('about');
+                    const footerSection = document.getElementById('contact');
+                    const aboutTop = aboutSection.offsetTop;
+                    const aboutHeight = aboutSection.clientHeight;
+                    const footerHeight = footerSection.clientHeight;
+                    const totalHeight = aboutHeight + footerHeight;
+                    const scrollPosition = window.scrollY - aboutTop;
+                    
+                    if (scrollPosition < 0) {
+                        // Just entering about section
+                        aboutOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                    } else if (scrollPosition < totalHeight) {
+                        // Inside about and footer sections
+                        const opacity = 0.5 - (scrollPosition / totalHeight) * 0.5;
+                        aboutOverlay.style.backgroundColor = `rgba(0, 0, 0, ${Math.max(0, opacity)})`;
+                    } else {
+                        // Past footer
+                        aboutOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0)';
+                    }
+                } else {
+                    aboutOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0)';
+                }
+
+                // Update scroll progress for ASCII animation
+                const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                scrollProgress = window.scrollY / docHeight;
+            });
+        }
+
+        // ========== Mobile Menu ==========
+        function initMobileMenu() {
+            const menuBtn = document.getElementById('mobileMenuBtn');
+            const closeBtn = document.getElementById('mobileNavClose');
+            const mobileNav = document.getElementById('mobileNav');
+            const mobileLinks = mobileNav.querySelectorAll('a');
+
+            menuBtn.addEventListener('click', () => {
+                mobileNav.classList.add('active');
+            });
+
+            closeBtn.addEventListener('click', () => {
+                mobileNav.classList.remove('active');
+            });
+
+            mobileLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileNav.classList.remove('active');
+                });
+            });
+        }
+
+        // ========== 动态PORTFOLIO的p5.js逻辑 ==========
+        window.p5Instances = [];
+        
+        // 初始化单个字母的 p5.js
+        function initLetterP5(el) {
+            const txt = el.innerText.trim();
+            const fs = parseFloat(getComputedStyle(el).fontSize);
+
+            return new p5(p => {
+                window.p5Instances.push(p);
+                let lines = [];
+                let pg;
+
+                p.setup = () => {
+                    const w = el.offsetWidth;
+                    const h = el.offsetHeight;
+                    p.createCanvas(w, h);
+                    makeLines();
+                };
+
+                function makeLines() {
+                    lines = [];
+                    const w = p.width, h = p.height;
+                    pg = p.createGraphics(w, h);
+                    pg.background(0);
+                    pg.fill(255);
+                    pg.textSize(fs * 0.9);
+                    pg.textAlign(p.CENTER, p.CENTER);
+                    pg.text(txt, w/2, h/2);
+
+                    const STRING_GAP = 4.5;
+                    for (let y = h - STRING_GAP; y >= 0; y -= STRING_GAP) {
+                        let inSeg = false;
+                        let sx = 0;
+
+                        for (let x = 0; x < w; x += 1) {
+                            const c = pg.get(x, y);
+                            const on = c[0] > 128;
+
+                            if (on && !inSeg) {
+                                sx = x;
+                                inSeg = true;
+                            } else if (!on && inSeg) {
+                                const segLen = x - sx;
+                                if (segLen >= 2) {
+                                    lines.push({
+                                        x: sx,
+                                        y: y,
+                                        len: segLen,
+                                        oy: y,
+                                        v: 0
+                                    });
+                                }
+                                inSeg = false;
+                            }
+                        }
+                        if (inSeg) {
+                            const segLen = w - sx;
+                            if (segLen >= 2) {
+                                lines.push({
+                                    x: sx,
+                                    y: y,
+                                    len: segLen,
+                                    oy: y,
+                                    v: 0
+                                });
+                            }
+                        }
+                    }
+                }
+
+                p.draw = () => {
+                    if (document.hidden) return;
+                    p.clear();
+                    p.strokeWeight(1.5);
+
+                    lines.forEach(line => {
+                        const d = p.dist(p.mouseX, p.mouseY, line.x + line.len/2, line.y);
+                        
+                        if (d < 60) {
+                            line.v += (60 - d) / 60 * 2.5;
+                        }
+
+                        line.v += (line.oy - line.y) * 0.07;
+                        line.v *= 0.94;
+                        line.y += line.v;
+
+                        if (d < 60) {
+                            p.stroke(180, 100, 255);
+                        } else {
+                            p.stroke(255);
+                        }
+
+                        p.line(line.x, line.y, line.x + line.len, line.y);
+                    });
+                };
+            }, el);
+        }
+        
+        // 初始化所有字母
+        function initAllLetters() {
+            document.querySelectorAll('.letter, .letter-o').forEach(el => {
+                initLetterP5(el);
+            });
+        }
+        
+        // 首次初始化
+        initAllLetters();
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                stopRainLoop();
+            } else {
+                resizeCanvas();
+                startRainLoop();
+            }
+            window.p5Instances.forEach(p => {
+                try {
+                    if (document.hidden) p.noLoop();
+                    else p.loop();
+                } catch (e) {}
+            });
+        });
+
+        // ========== PORTFOLIO 组件自适应调整 ==========
+        let lastWidth = 0;
+        
+        function updatePortfolioScale() {
+            const alignBox = document.querySelector('.align-box');
+            if (!alignBox) return;
+            
+            // 获取视口尺寸
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            
+            // 计算合适的容器宽度
+            // 基于视口高度计算最大宽度（保持 16:9 比例）
+            const maxWidthByHeight = vh * 1.6;
+            const maxWidthByWidth = vw - 32; // 减去边距
+            
+            // 取较小值，确保内容不会溢出
+            let targetWidth = Math.min(maxWidthByHeight, maxWidthByWidth, 1100);
+            
+            // 如果宽度变化超过阈值，才重新初始化
+            if (Math.abs(targetWidth - lastWidth) > 50) {
+                lastWidth = targetWidth;
+                
+                // 应用宽度
+                alignBox.style.width = targetWidth + 'px';
+                
+                // 移除旧的 p5.js 画布并重新初始化
+                setTimeout(() => {
+                    // 移除所有 p5.js 实例
+                    window.p5Instances.forEach(p => {
+                        try {
+                            p.remove();
+                        } catch(e) {}
+                    });
+                    window.p5Instances = [];
+                    
+                    // 清除所有 canvas
+                    document.querySelectorAll('.letter canvas, .letter-o canvas').forEach(canvas => {
+                        canvas.remove();
+                    });
+                    
+                    // 重新初始化所有字母
+                    initAllLetters();
+                }, 100);
+            }
+        }
+
+        // ========== Initialize ==========
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            postProjectsScrollScale();
+            updatePortfolioScale();
+        });
+
+        window.addEventListener('load', scheduleRainBootstrap);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            resizeCanvas();
+            updatePortfolioScale();
+
+            initScrollAnimations();
+            initSideNav();
+            initMobileMenu();
+
+            // 强制滚动到顶部，确保刷新时显示home页
+            window.scrollTo(0, 0);
+
+            setTimeout(() => {
+                document.querySelector('.align-box').classList.add('visible');
+            }, 300);
+
+        });
+    </script>
+</body>
+</html>

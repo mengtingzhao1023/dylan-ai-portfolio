@@ -1,0 +1,102 @@
+/**
+ * =============================================================================
+ * 全站底层规则（Global Base）— 新页面请 <link rel="stylesheet" href="css/global-base.css">
+ * =============================================================================
+ *
+ * 1) 响应式
+ *    - 布局与字号优先使用 clamp / vw / vh / % / rem；极细描边可用 1px。
+ *    - 数字雨字号：--rain-font-size: clamp(14px, 1.8vw, 28px)
+ *    - 列间距 = 当前字号 × --rain-col-gap-ratio（默认 2.4），由 JS 读取探测元素计算。
+ *    - window resize 时重算布局并重绘 Canvas。
+ *
+ * 2) 性能
+ *    - 背景数字雨使用 requestAnimationFrame，节流目标帧率；document.hidden 时暂停。
+ *    - 首屏后懒启动数字雨（load + requestIdleCallback / 降级 setTimeout）。
+ *    - 仅绘制视口内列与行（裁剪超出画布字符）。
+ *
+ * 3) 层级
+ *    - --z-rain: 最底层 | --z-content 及以上：文字与导航始终压在数字雨之上。
+ *
+ * 4) 视觉
+ *    - 数字雨：靠画面上方更亮、向下渐弱；拖影与 --color-bg 融合。
+ * =============================================================================
+ */
+
+:root {
+    --color-bg: #0a0a12;
+    --color-text: #ffffff;
+
+    --rain-font-size: clamp(14px, 1.8vw, 28px);
+    --rain-col-gap-ratio: 2.4;
+
+    --z-rain: -1;
+    --z-content: 10;
+    --z-scroll-hint: 50;
+    --z-nav: 100;
+    --z-overlay: 200;
+
+    --space-gutter: clamp(1rem, 4vw, 2rem);
+    --space-section-x: clamp(1rem, 10vw, 5rem);
+    --space-section-pl: clamp(1rem, 12vw, 10rem);
+    --space-footer-y: clamp(2.5rem, 8vh, 4rem);
+
+    --width-side-nav: clamp(3.5rem, 12vw, 5rem);
+    --height-top-bar: clamp(3.5rem, 12vh, 5rem);
+
+    --radius-card: clamp(0.75rem, 2vw, 1rem);
+    --radius-pill: clamp(1rem, 3vw, 1.25rem);
+
+    --font-logo: clamp(0.8125rem, 1.8vw, 0.875rem);
+    --font-nav-hint: clamp(0.625rem, 1.5vw, 0.6875rem);
+    --font-label: clamp(0.625rem, 1.4vw, 0.6875rem);
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: 'Inter', system-ui, sans-serif;
+    overflow-x: hidden;
+    line-height: 1.6;
+}
+
+/* 数字雨字号探测（供 JS 读取真实 px，与视口联动） */
+#rain-font-probe {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    visibility: hidden;
+    pointer-events: none;
+    white-space: nowrap;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--rain-font-size);
+    line-height: 1;
+}
+
+/* 数字雨：全视口最底层 */
+#ascii-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: var(--z-rain);
+    pointer-events: none;
+    opacity: 0.495; /* 透明度×0.9 */
+}
+
+/* 文字主层：永远在数字雨之上 */
+.content-layer {
+    position: relative;
+    z-index: var(--z-content);
+    isolation: isolate;
+}
