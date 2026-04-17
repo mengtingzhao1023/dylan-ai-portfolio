@@ -583,6 +583,63 @@
             bgMouseActive = false;
         });
 
+        // ===== 触摸事件支持（移动端） =====
+        let touchStartY = 0;
+        let touchStartX = 0;
+        let isTouchInSphere = false;
+        
+        renderer.domElement.addEventListener('touchstart', (event) => {
+            if (event.touches.length === 1) {
+                touchStartY = event.touches[0].clientY;
+                touchStartX = event.touches[0].clientX;
+                
+                // 检查触摸是否在球体内
+                const rect = renderer.domElement.getBoundingClientRect();
+                const touchX = ((event.touches[0].clientX - rect.left) / rect.width) * 2 - 1;
+                const touchY = -((event.touches[0].clientY - rect.top) / rect.height) * 2 + 1;
+                
+                raycaster.setFromCamera(new THREE.Vector2(touchX, touchY), camera);
+                const intersectSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), networkRadius + 2);
+                const intersections = raycaster.ray.intersectSphere(intersectSphere, new THREE.Vector3());
+                isTouchInSphere = intersections !== null;
+                
+                // 处理节点点击
+                if (isTouchInSphere) {
+                    raycaster.setFromCamera(new THREE.Vector2(touchX, touchY), camera);
+                    const intersects = raycaster.intersectObjects(networkNodes);
+                    
+                    if (intersects.length > 0) {
+                        const node = intersects[0].object;
+                        if (node.userData.hasWork && node.userData.link) {
+                            // 通知父页面跳转
+                            window.parent.postMessage({
+                                type: 'navigate',
+                                url: node.userData.link
+                            }, '*');
+                        }
+                    }
+                }
+            }
+        }, { passive: true });
+        
+        renderer.domElement.addEventListener('touchmove', (event) => {
+            if (event.touches.length === 1) {
+                const touchY = event.touches[0].clientY;
+                const touchX = event.touches[0].clientX;
+                const deltaY = touchStartY - touchY;
+                const deltaX = touchStartX - touchX;
+                
+                // 如果触摸不在球体内，或者滑动距离较大，允许父页面滚动
+                if (!isTouchInSphere || Math.abs(deltaY) > 10) {
+                    // 不阻止默认行为，让父页面处理滚动
+                    return;
+                }
+                
+                // 在球体内处理旋转
+                event.preventDefault();
+            }
+        }, { passive: false });
+
         // ===== 窗口自适应 =====
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;

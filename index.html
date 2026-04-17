@@ -469,16 +469,16 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            height: clamp(7rem, 20vh, 15rem);
+            height: clamp(5rem, 18vh, 15rem);
             margin-bottom: clamp(1.5rem, 5vh, 3rem);
             width: 100%;
         }
 
         .letter {
             position: relative;
-            width: clamp(3rem, 9vw, 7rem);
-            height: clamp(7rem, 20vh, 15rem);
-            font-size: clamp(3rem, 11vw, 9rem);
+            width: clamp(2.2rem, 8vw, 7rem);
+            height: clamp(5rem, 18vh, 15rem);
+            font-size: clamp(2.2rem, 10vw, 9rem);
             font-weight: 100;
             line-height: 1;
             text-align: center;
@@ -487,13 +487,30 @@
 
         .letter-o {
             position: relative;
-            width: clamp(4.2rem, 12.6vw, 10rem);
-            height: clamp(7rem, 20vh, 15rem);
-            font-size: clamp(4.2rem, 15vw, 14rem);
+            width: clamp(3rem, 11vw, 10rem);
+            height: clamp(5rem, 18vh, 15rem);
+            font-size: clamp(3rem, 13vw, 14rem);
             font-weight: 100;
             line-height: 1;
             text-align: center;
             color: transparent;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .middle {
+                height: clamp(4rem, 15vh, 8rem);
+            }
+            .letter {
+                width: clamp(1.8rem, 7vw, 3rem);
+                height: clamp(4rem, 15vh, 8rem);
+                font-size: clamp(1.8rem, 8vw, 4rem);
+            }
+            .letter-o {
+                width: clamp(2.5rem, 9vw, 4rem);
+                height: clamp(4rem, 15vh, 8rem);
+                font-size: clamp(2.5rem, 10vw, 5rem);
+            }
         }
 
         .letter canvas,
@@ -1034,7 +1051,7 @@
     <header class="top-bar">
         <div class="logo">ZMT</div>
         <div class="flex items-center gap-4">
-            <a href="赵梦婷AI产品助理简历.pdf" download="赵梦婷-AI产品助理简历.pdf" class="resume-download">
+            <a href="赵梦婷AI产品方向简历.pdf" download="赵梦婷-AI产品方向简历.pdf" class="resume-download">
                 <span class="lang-toggle" data-lang="download_resume">下载简历</span>
             </a>
             <span class="contact-btn" data-lang="contact_me">联系我</span>
@@ -1907,6 +1924,14 @@
                 }, 100);
             }
         }
+
+        // ========== 监听 iframe 导航消息 ==========
+        window.addEventListener('message', (e) => {
+            const data = e.data || {};
+            if (data.type === 'navigate' && data.url) {
+                window.open(data.url, '_blank');
+            }
+        });
 
         // ========== Initialize ==========
         window.addEventListener('resize', () => {
