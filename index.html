@@ -1784,7 +1784,7 @@
                     pg.textAlign(p.CENTER, p.CENTER);
                     pg.text(txt, w/2, h/2);
 
-                    const STRING_GAP = 4.5;
+                    const STRING_GAP = 2.5;
                     for (let y = h - STRING_GAP; y >= 0; y -= STRING_GAP) {
                         let inSeg = false;
                         let sx = 0;
@@ -1828,7 +1828,7 @@
                 p.draw = () => {
                     if (document.hidden) return;
                     p.clear();
-                    p.strokeWeight(1.5);
+                    p.strokeWeight(0.5);
 
                     lines.forEach(line => {
                         const d = p.dist(p.mouseX, p.mouseY, line.x + line.len/2, line.y);
