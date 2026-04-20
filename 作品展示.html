@@ -13,35 +13,374 @@
             display: block; 
         }
 
-        #tooltip {
-            position: absolute;
-            background-color: rgba(0, 20, 40, 0.9);
-            border: 1px solid #ff6600;
-            border-radius: 8px;
-            padding: 15px;
+        /* 项目卡片样式 */
+        #project-card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            /* 使用固定宽度，让 scale 能够正确生效 */
+            width: 500px;
+            max-width: 90vw;
+            background: rgba(10, 10, 20, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(168, 85, 247, 0.5);
+            border-radius: 20px;
+            padding: 0;
             color: #ffffff;
-            font-family: sans-serif;
-            font-size: 14px;
-            max-width: 300px;
-            pointer-events: none;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             opacity: 0;
-            transition: opacity 0.3s ease;
-            box-shadow: 0 0 20px rgba(255, 102, 0, 0.3);
+            visibility: hidden;
+            /* 分开过渡属性，transform 由 JS 控制 */
+            transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                        visibility 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 
+                0 0 60px rgba(168, 85, 247, 0.4),
+                0 20px 60px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+            overflow: hidden;
+            /* 初始 transform 由 JS 设置 */
+            transform: translate(-50%, -50%) scale(1);
         }
-        #tooltip h3 {
-            margin: 0 0 10px 0;
-            color: #ff6600;
-            font-size: 16px;
+        
+        #project-card.visible {
+            opacity: 1;
+            visibility: visible;
         }
-        #tooltip p {
-            margin: 5px 0;
-            color: #cccccc;
+        
+        /* 卡片关闭按钮 */
+        .card-close-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            color: #ffffff;
+            font-size: 20px;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+        .card-close-btn:hover {
+            background: rgba(255, 100, 100, 0.3);
+            border-color: rgba(255, 100, 100, 0.5);
+            transform: scale(1.1);
+        }
+        
+        /* 卡片头部渐变 */
+        .card-header {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(139, 92, 246, 0.2) 100%);
+            padding: 24px;
+            border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+        }
+        
+        .card-number {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%);
+            border-radius: 12px;
+            text-align: center;
+            line-height: 40px;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
+        }
+        
+        .card-title {
+            margin: 0 0 8px 0;
+            font-size: 22px;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1.3;
+        }
+        
+        .card-meta {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .card-role {
+            display: inline-block;
+            background: rgba(168, 85, 247, 0.2);
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 12px;
+            color: #c084fc;
+            font-weight: 500;
+        }
+        
+        .card-time {
+            display: inline-block;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            line-height: 24px;
+        }
+        
+        /* 卡片内容 */
+        .card-body {
+            padding: 20px 24px;
+        }
+        
+        .card-description {
+            margin: 0 0 16px 0;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+        }
+        
+        .card-highlights {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .card-highlights li {
+            position: relative;
+            padding-left: 20px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.5;
+        }
+        
+        .card-highlights li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 8px;
+            width: 6px;
+            height: 6px;
+            background: linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(168, 85, 247, 0.6);
+        }
+        
+        /* 卡片底部 */
+        .card-footer {
+            padding: 16px 24px 24px;
+            display: flex;
+            gap: 12px;
+        }
+        
+        .card-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+        }
+        
+        .card-btn-primary {
+            background: linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
+        }
+        
+        .card-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(168, 85, 247, 0.5);
+        }
+        
+        .card-btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .card-btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        /* 移动端自适应 */
+        @media (max-width: 768px) {
+            #project-card {
+                width: 400px;
+                max-width: 92vw;
+                border-radius: 16px;
+            }
+            
+            .card-header {
+                padding: 16px 20px;
+            }
+            
+            .card-number {
+                width: 32px;
+                height: 32px;
+                line-height: 32px;
+                font-size: 14px;
+                margin-bottom: 10px;
+            }
+            
+            .card-title {
+                font-size: 18px;
+                margin: 0 0 6px 0;
+            }
+            
+            .card-meta {
+                gap: 8px;
+            }
+            
+            .card-role {
+                font-size: 11px;
+                padding: 3px 10px;
+            }
+            
+            .card-time {
+                font-size: 11px;
+                line-height: 20px;
+            }
+            
+            .card-body {
+                padding: 16px 20px;
+            }
+            
+            .card-description {
+                font-size: 13px;
+                margin: 0 0 12px 0;
+            }
+            
+            .card-highlights li {
+                font-size: 12px;
+                padding-left: 16px;
+                margin-bottom: 6px;
+            }
+            
+            .card-highlights li::before {
+                width: 5px;
+                height: 5px;
+                top: 6px;
+            }
+            
+            .card-footer {
+                padding: 12px 20px 20px;
+                gap: 10px;
+            }
+            
+            .card-btn {
+                padding: 10px 16px;
+                font-size: 13px;
+                border-radius: 8px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            #project-card {
+                width: 320px;
+                max-width: 95vw;
+                border-radius: 14px;
+            }
+            
+            .card-header {
+                padding: 14px 16px;
+            }
+            
+            .card-number {
+                width: 28px;
+                height: 28px;
+                line-height: 28px;
+                font-size: 12px;
+            }
+            
+            .card-title {
+                font-size: 16px;
+            }
+            
+            .card-body {
+                padding: 14px 16px;
+            }
+            
+            .card-description {
+                font-size: 12px;
+            }
+            
+            .card-highlights li {
+                font-size: 11px;
+            }
+            
+            .card-footer {
+                padding: 10px 16px 16px;
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .card-btn {
+                width: 100%;
+                padding: 12px;
+            }
+        }
+        
+        /* 背景遮罩 */
+        #card-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 999;
+        }
+        
+        #card-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        /* 旧tooltip隐藏 */
+        #tooltip {
+            display: none;
         }
     </style>
 </head>
 <body>
 
     <div id="tooltip"></div>
+    
+    <!-- 背景遮罩 -->
+    <div id="card-overlay"></div>
+    
+    <!-- 项目卡片 -->
+    <div id="project-card">
+        <button class="card-close-btn" id="card-btn-close">×</button>
+        <div class="card-header">
+            <h3 class="card-title" id="card-title">项目名称</h3>
+            <div class="card-meta">
+                <span class="card-role" id="card-role">角色</span>
+                <span class="card-time" id="card-time">时间</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <p class="card-description" id="card-description">项目描述</p>
+            <ul class="card-highlights" id="card-highlights">
+                <li>亮点1</li>
+                <li>亮点2</li>
+                <li>亮点3</li>
+            </ul>
+        </div>
+        <div class="card-footer">
+            <button class="card-btn card-btn-primary" id="card-btn-view">查看项目</button>
+            <button class="card-btn card-btn-secondary" id="card-btn-doc" style="display: none;">查看技术文档</button>
+        </div>
+    </div>
 
     <!-- 引入 Three.js 和相关库 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -49,16 +388,109 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 
     <script>
-        // 作品数据（精简8个亮节点 + 浅色背景节点×1.5）
+        // AI产品项目数据（6个核心项目）
         const worksData = [
-            { id: 1, name: '火焰特效', nameEn: 'Fire Effect', description: '基于Shader的实时火焰渲染效果', descriptionEn: 'Real-time fire rendering based on Shader', hasWork: true },
-            { id: 2, name: '粒子系统', nameEn: 'Particle System', description: '高性能粒子系统，支持百万级渲染', descriptionEn: 'High-performance particle system supporting millions of particles', hasWork: true },
-            { id: 3, name: '3D建模', nameEn: '3D Modeling', description: '使用Blender创建的精细3D模型', descriptionEn: 'Detailed 3D models created with Blender', hasWork: true },
-            { id: 4, name: 'WebXR', nameEn: 'WebXR', description: '沉浸式VR/AR体验开发', descriptionEn: 'Immersive VR/AR experience development', hasWork: true },
-            { id: 5, name: '物理引擎', nameEn: 'Physics Engine', description: '基于物理的真实感模拟', descriptionEn: 'Physics-based realistic simulation', hasWork: true },
-            { id: 6, name: '音画同步', nameEn: 'Audio-Visual Sync', description: '音乐可视化与实时音频分析', descriptionEn: 'Music visualization and real-time audio analysis', hasWork: true },
-            { id: 7, name: '神经网络', nameEn: 'Neural Network', description: '机器学习可视化与AI艺术生成', descriptionEn: 'Machine learning visualization and AI art generation', hasWork: true },
-            { id: 8, name: '后处理', nameEn: 'Post Processing', description: 'Bloom/景深/运动模糊', descriptionEn: 'Bloom/Depth of Field/Motion Blur', hasWork: true },
+            {
+                id: 1,
+                name: '▲ AI对话收藏整理工具',
+                nameEn: '▲ AI Chat Organizer',
+                description: '多平台AI对话收藏自动整理工具',
+                descriptionEn: 'Multi-platform AI conversation collection auto-organization tool',
+                role: '产品经理',
+                time: '2025.09 — 至今',
+                highlights: [
+                    '多平台整合：统一管理豆包、Kimi、千问、DeepSeek对话收藏，解决跨平台信息孤岛',
+                    '智能整理引擎：以免费为主，结合本地规则与AI实现自动分类、标签提取、摘要生成',
+                    '全流程闭环：覆盖授权、同步、整理、知识库、月度总结、数据备份全链路',
+                    '数据安全：本地加密存储，支持备份恢复，保障隐私安全'
+                ],
+                hasWork: true,
+                link: 'https://mengtingzhao1023.github.io/multi-ai-chat-organizer/',
+                docLink: 'https://mengtingzhao1023.github.io/multi-ai-tech-docs/'
+            },
+            {
+                id: 2,
+                name: '▲ Multi-Agent开发流水线',
+                nameEn: '▲ Multi-Agent Pipeline',
+                description: '轻量化人工编排多Agent协同开发体系',
+                descriptionEn: 'Lightweight human-orchestrated multi-Agent collaborative development system',
+                role: '体系架构师',
+                time: '2025.11 — 至今',
+                highlights: [
+                    '针对复杂多模块产品AI协作上下文断裂、规范难落地痛点，自研轻量化人工编排多Agent协同体系',
+                    '核心架构：双层目录与角色分工：外层总工程师AI全局约束，内层前端/终端/后端AI并行执行',
+                    '全流程闭环：统一激活提示词生成→单会话记忆固化→AI分级审核→双路径自动备份→跨AI指令协同'
+                ],
+                hasWork: true,
+                link: 'https://mengtingzhao1023.github.io/multi-ai-agent-framework/'
+            },
+            {
+                id: 3,
+                name: '智能课件生成工具',
+                nameEn: 'Courseware Generator',
+                description: '网盘视频智能课件生成工具',
+                descriptionEn: 'Cloud video intelligent courseware generation tool',
+                role: '产品经理',
+                time: '2025.02 — 2025.03',
+                highlights: [
+                    '核心功能：基于百度网盘视频一键提取内容，自动生成结构化课件文档',
+                    'AI能力：支持多平台网盘链接解析，智能总结要点，自动生成层级化课程大纲',
+                    '导出格式：可导出Markdown/PDF/Word多种格式'
+                ],
+                hasWork: true,
+                link: 'https://mengtingzhao1023.github.io/courseware-generator/'
+            },
+            {
+                id: 4,
+                name: 'Prompt Optimizer Pro',
+                nameEn: 'Prompt Optimizer',
+                description: 'Coze平台提示词优化工具',
+                descriptionEn: 'Coze platform prompt optimization tool',
+                role: '产品设计师',
+                time: '2024.12 — 2025.02',
+                highlights: [
+                    '需求解析引擎：模糊输入识别、要素拆解、约束提取，融合产品与AI工程能力',
+                    '模板校验系统：多维度校验，一键生成可执行Prompt，落地提示工程实践'
+                ],
+                hasWork: true,
+                link: 'https://mengtingzhao1023.github.io/prompt-optimizer-tool/'
+            },
+            {
+                id: 5,
+                name: '▲ 塔罗智能工作平台',
+                nameEn: '▲ Tarot AI Platform',
+                description: '基于自研多AI协同工作流开发塔罗综合智能平台',
+                descriptionEn: 'Based on self-developed multi-AI collaborative workflow, developed a comprehensive tarot intelligent platform',
+                role: '产品负责人',
+                time: '2025.08 — 至今',
+                highlights: [
+                    '基于自研多AI协同工作流开发塔罗综合智能平台，既是功能集合，也是「复杂多模块产品全链路设计」与「AI协作体系」的双重验证',
+                    '产品架构与功能：用户管理与数据闭环：客户档案、跟进记录、牌组使用频率可视化，融入B端CRM思维',
+                    'AI教练与学习系统：集成多AI协同解读引擎，支持个性化学习路径，探索垂直领域AI拟人化落地',
+                    '核心成果：应用自研「Multi-Agent并行开发流水线」，后端逻辑80%由AI Agent生成，本人负责架构审核与体验终审'
+                ],
+                hasWork: true,
+                link: 'https://mengtingzhao1023.github.io/tarot-ai-reader/',
+                docLink: 'https://mengtingzhao1023.github.io/tarot-tech-docs/'
+            },
+            {
+                id: 6,
+                name: '▲ 灵魂复刻AI陪伴',
+                nameEn: '▲ Soul Replica AI',
+                description: '融合三才命理的高保真数字人格AI陪伴',
+                descriptionEn: 'High-fidelity digital personality AI companion integrating Three Talents metaphysics',
+                role: '产品规划',
+                time: '2025.10 — 至今',
+                highlights: [
+                    '融合三才命理，整合八字、紫微斗数与星盘，AI仅转译不测算，避免幻觉',
+                    '采集成长环境、个人记忆、语音特征等数据，构建高保真数字人格',
+                    '依据运势动态调整AI性格，呈现真实活人感',
+                    '支持聊天记录导入与持续学习，实现长期记忆进化',
+                    '区别于常规AI，打造有灵魂的数字生命体，满足深度情感陪伴需求'
+                ],
+                hasWork: true,
+                link: 'https://mengtingzhao1023.github.io/soul-replica-companion-ai/'
+            },
             { id: 9, name: '待添加', nameEn: 'Coming Soon', description: '即将上线，敬请期待...', descriptionEn: 'Coming soon, stay tuned...', hasWork: false },
             { id: 10, name: '待添加', nameEn: 'Coming Soon', description: '即将上线，敬请期待...', descriptionEn: 'Coming soon, stay tuned...', hasWork: false },
             { id: 11, name: '待添加', nameEn: 'Coming Soon', description: '即将上线，敬请期待...', descriptionEn: 'Coming soon, stay tuned...', hasWork: false },
@@ -133,6 +565,7 @@
 
         // ===== 与父页面通信：根据全局滚动进度同步模型缩放 =====
         // 约定：父页面发送 scrollScale，scale 范围 [0.5, 1.5]
+        let globalSceneScale = 1;
         window.addEventListener('message', (e) => {
             const data = e.data || {};
             if (data.type === 'scrollScale') {
@@ -141,7 +574,14 @@
                 let s = Number(data.scale);
                 if (!Number.isFinite(s)) return;
                 s = Math.max(minScale, Math.min(maxScale, s));
+                globalSceneScale = s;
                 scene.scale.setScalar(s);
+                
+                // 同步更新卡片缩放
+                const projectCard = document.getElementById('project-card');
+                if (projectCard) {
+                    projectCard.style.transform = `translate(-50%, -50%) scale(${s})`;
+                }
             }
         });
 
@@ -299,7 +739,8 @@
         // ===== 第二部分：外围球形网络 =====
         const networkNodes = [];
         const networkLines = [];
-        const nodeCount = worksData.length;
+        // 节点数量：60个无项目节点形成球 + 6个有项目节点叠加 = 66个节点
+        const nodeCount = 66;
         const networkRadius = 10;
 
         function createNetworkNodeTexture(hasWork) {
@@ -329,60 +770,79 @@
         }
 
         const networkNodePositions = [];
-        for (let i = 0; i < nodeCount; i++) {
-            const phi = Math.acos(1 - 2 * (i + 0.5) / nodeCount);
+        
+        // 6个有项目的节点均匀分布在球体不同方向（正六面体顶点位置，后面的往上偏移避免重叠）
+        const workNodePositions = [
+            { x: 1, y: 0, z: 0 },           // 右
+            { x: -1, y: 0, z: 0 },          // 左
+            { x: 0, y: 1, z: 0 },           // 上
+            { x: 0, y: -1, z: 0 },          // 下
+            { x: 0, y: 0, z: 1 },           // 前
+            { x: 0, y: 0.5, z: -0.866 }     // 后（往上偏移30度，避免和前面重叠）
+        ];
+        
+        // 为所有节点生成位置（60个无项目节点形成球 + 6个项目节点叠加）
+        const allPositions = [];
+        
+        // 先添加60个斐波那契分布的节点位置（形成完整的球）
+        const fibCount = 60;
+        for (let i = 0; i < fibCount; i++) {
+            const phi = Math.acos(1 - 2 * (i + 0.5) / fibCount);
             const theta = Math.PI * (1 + Math.sqrt(5)) * i;
             
             const x = networkRadius * Math.cos(theta) * Math.sin(phi);
             const y = networkRadius * Math.sin(theta) * Math.sin(phi);
             const z = networkRadius * Math.cos(phi);
             
-            networkNodePositions.push({ x, y, z });
+            allPositions.push({ x, y, z });
+        }
+        
+        // 再添加6个项目节点位置（叠加在球上）
+        for (let i = 0; i < workNodePositions.length; i++) {
+            const pos = workNodePositions[i];
+            const r = networkRadius;
+            const len = Math.sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z);
+            allPositions.push({
+                x: r * pos.x / len,
+                y: r * pos.y / len,
+                z: r * pos.z / len
+            });
+        }
+        
+        // 项目节点是后6个（索引60-65）
+        const hasWorkIndices = [60, 61, 62, 63, 64, 65];
+        
+        // 复制到最终位置数组
+        for (let i = 0; i < nodeCount; i++) {
+            networkNodePositions.push({
+                x: allPositions[i].x,
+                y: allPositions[i].y,
+                z: allPositions[i].z
+            });
         }
 
-        const hasWorkIndices = [];
-        const noWorkIndices = [];
-        
+        // 创建所有节点（66个），索引60-65是有项目的，其余0-59是无项目的
         for (let i = 0; i < nodeCount; i++) {
-            if (worksData[i].hasWork) {
-                hasWorkIndices.push(i);
-            } else {
-                noWorkIndices.push(i);
-            }
-        }
-        
-        const reorderedWorksData = [];
-        const step = nodeCount / hasWorkIndices.length;
-        const workPosIndices = [];
-        
-        for (let i = 0; i < hasWorkIndices.length; i++) {
-            const idx = Math.floor(i * step + step / 2) % nodeCount;
-            workPosIndices.push(idx);
-        }
-        
-        for (let i = 0; i < nodeCount; i++) {
-            const workIdx = workPosIndices.indexOf(i);
-            if (workIdx !== -1) {
-                reorderedWorksData.push(worksData[hasWorkIndices[workIdx]]);
-            } else {
-                const noWorkIdx = reorderedWorksData.filter(w => !w.hasWork).length;
-                reorderedWorksData.push(worksData[noWorkIndices[noWorkIdx % noWorkIndices.length]]);
-            }
-        }
-
-        for (let i = 0; i < nodeCount; i++) {
-            const workData = reorderedWorksData[i];
+            // 获取对应的数据（项目节点用worksData，无项目节点用默认数据）
+            const workDataIndex = hasWorkIndices.indexOf(i);
+            const workData = workDataIndex !== -1 ? worksData[workDataIndex] : {
+                id: i + 1,
+                name: '节点' + (i + 1),
+                nameEn: 'Node ' + (i + 1),
+                hasWork: false
+            };
             const pos = networkNodePositions[i];
+            const hasWork = workDataIndex !== -1; // 检查是否是项目节点
             
             const nodeGeometry = new THREE.BufferGeometry();
             const positions = new Float32Array([0, 0, 0]);
             nodeGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
             
             const nodeMaterial = new THREE.PointsMaterial({
-                size: workData.hasWork ? 0.588 : 0.315,
-                map: createNetworkNodeTexture(workData.hasWork),
+                size: hasWork ? 0.588 : 0.315,
+                map: createNetworkNodeTexture(hasWork),
                 transparent: true,
-                opacity: workData.hasWork ? 2.0 : 1.5,
+                opacity: hasWork ? 2.0 : 1.5,
                 blending: THREE.AdditiveBlending,
                 depthWrite: false,
                 sizeAttenuation: true
@@ -391,8 +851,74 @@
             const node = new THREE.Points(nodeGeometry, nodeMaterial);
             node.position.set(pos.x, pos.y, pos.z);
             node.userData = workData;
+            node.userData.hasWork = hasWork; // 显式设置hasWork
             scene.add(node);
             networkNodes.push(node);
+            
+            // 为有项目的节点添加文字标签（对话框样式）
+            if (hasWork) {
+                // 创建外层容器（定位在节点位置）
+                const labelWrapper = document.createElement('div');
+                labelWrapper.className = 'node-label-wrapper';
+                labelWrapper.style.cssText = `
+                    position: absolute;
+                    pointer-events: none;
+                    z-index: 100;
+                    opacity: 0.95;
+                    transition: opacity 0.3s ease;
+                    transform-origin: left center;
+                `;
+                
+                // 创建内容容器（包含箭头和文字）
+                const labelContent = document.createElement('div');
+                labelContent.className = 'node-label-content';
+                labelContent.style.cssText = `
+                    position: relative;
+                    display: flex;
+                    align-items: center;
+                `;
+                
+                // 添加箭头（在左侧，直接连着粒子）
+                const arrow = document.createElement('div');
+                arrow.className = 'node-label-arrow';
+                arrow.style.cssText = `
+                    width: 0;
+                    height: 0;
+                    border-style: solid;
+                    border-width: 6px 8px 6px 0;
+                    border-color: transparent rgba(255, 140, 0, 0.8) transparent transparent;
+                    flex-shrink: 0;
+                `;
+                
+                // 添加文字标签
+                const labelDiv = document.createElement('div');
+                labelDiv.className = 'node-label';
+                labelDiv.textContent = currentLang === 'zh' ? workData.name : workData.nameEn;
+                labelDiv.style.cssText = `
+                    color: rgba(255, 255, 255, 0.95);
+                    font-size: 12px;
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+                    font-weight: 500;
+                    white-space: nowrap;
+                    padding: 8px 14px;
+                    background: rgba(20, 10, 5, 0.9);
+                    border-radius: 10px;
+                    border: 1px solid rgba(255, 140, 0, 0.6);
+                    box-shadow: 
+                        0 0 20px rgba(255, 140, 0, 0.3),
+                        0 4px 15px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                    margin-left: -1px;
+                `;
+                
+                labelContent.appendChild(arrow);
+                labelContent.appendChild(labelDiv);
+                labelWrapper.appendChild(labelContent);
+                document.body.appendChild(labelWrapper);
+                node.userData.labelElement = labelWrapper;
+                node.userData.labelArrow = arrow;
+                node.userData.labelContent = labelDiv;
+            }
         }
 
         const networkLineMaterial = new THREE.LineDashedMaterial({
@@ -416,7 +942,7 @@
                     Math.pow(pos1.z - pos2.z, 2)
                 );
                 
-                if (dist < 7) {
+                if (dist < 8) {
                     const p1 = new THREE.Vector3(pos1.x, pos1.y, pos1.z);
                     const p2 = new THREE.Vector3(pos2.x, pos2.y, pos2.z);
                     
@@ -438,18 +964,24 @@
         }
 
         // ===== 第三部分：背景粒子 =====
-        const bgParticlesCount = 540;
+        const bgParticlesCount = 800;
         const bgParticlesGeometry = new THREE.BufferGeometry();
         const bgPositions = new Float32Array(bgParticlesCount * 3);
 
-        for (let i = 0; i < bgParticlesCount * 3; i += 3) {
-            const r = 14.7 + Math.random() * 6.3;
-            const phi = Math.acos(1 - 2 * Math.random());
-            const theta = Math.PI * 2 * Math.random();
+        // 使用斐波那契球面分布算法，让粒子更均匀
+        for (let i = 0; i < bgParticlesCount; i++) {
+            const index = i * 3;
             
-            bgPositions[i] = r * Math.cos(theta) * Math.sin(phi);
-            bgPositions[i + 1] = r * Math.sin(theta) * Math.sin(phi);
-            bgPositions[i + 2] = r * Math.cos(phi);
+            // 斐波那契球面分布
+            const phi = Math.acos(1 - 2 * (i + 0.5) / bgParticlesCount);
+            const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+            
+            // 在球壳范围内随机半径，形成厚度
+            const r = 14.7 + Math.random() * 6.3;
+            
+            bgPositions[index] = r * Math.cos(theta) * Math.sin(phi);
+            bgPositions[index + 1] = r * Math.sin(theta) * Math.sin(phi);
+            bgPositions[index + 2] = r * Math.cos(phi);
         }
 
         bgParticlesGeometry.setAttribute('position', new THREE.BufferAttribute(bgPositions, 3));
@@ -471,23 +1003,104 @@
         // ===== 交互逻辑 =====
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
-        const tooltip = document.getElementById('tooltip');
         let hoveredNode = null;
         
         let bgMousePos = new THREE.Vector3(0, 0, 0);
         let bgMouseActive = false;
+        
+        // 项目卡片元素
+        const projectCard = document.getElementById('project-card');
+        const cardOverlay = document.getElementById('card-overlay');
+        const cardTitle = document.getElementById('card-title');
+        const cardRole = document.getElementById('card-role');
+        const cardTime = document.getElementById('card-time');
+        const cardDescription = document.getElementById('card-description');
+        const cardHighlights = document.getElementById('card-highlights');
+        const cardBtnView = document.getElementById('card-btn-view');
+        const cardBtnClose = document.getElementById('card-btn-close');
+        const cardBtnDoc = document.getElementById('card-btn-doc');
+        
+        // 初始化卡片 transform（使用默认缩放 1）
+        projectCard.style.transform = `translate(-50%, -50%) scale(${globalSceneScale})`;
+        
+        // 显示项目卡片
+        function showProjectCard(node) {
+            if (!node || !node.userData.hasWork) return;
+            
+            const data = node.userData;
+            cardTitle.textContent = currentLang === 'zh' ? data.name : data.nameEn;
+            cardRole.textContent = data.role || '产品经理';
+            cardTime.textContent = data.time || '';
+            cardDescription.textContent = currentLang === 'zh' ? data.description : data.descriptionEn;
+            
+            // 更新亮点列表
+            cardHighlights.innerHTML = '';
+            if (data.highlights && data.highlights.length > 0) {
+                data.highlights.forEach(highlight => {
+                    const li = document.createElement('li');
+                    li.textContent = highlight;
+                    cardHighlights.appendChild(li);
+                });
+            }
+            
+            // 设置查看按钮链接
+            if (data.link && data.link !== '#') {
+                cardBtnView.onclick = () => {
+                    window.open(data.link, '_blank');
+                };
+                cardBtnView.style.opacity = '1';
+                cardBtnView.style.cursor = 'pointer';
+            } else {
+                cardBtnView.onclick = null;
+                cardBtnView.style.opacity = '0.5';
+                cardBtnView.style.cursor = 'not-allowed';
+            }
+
+            // 设置查看技术文档按钮（仅对特定项目显示）
+            const hasDocProjects = ['▲ AI对话收藏整理工具', '▲ 塔罗智能工作平台'];
+            if (hasDocProjects.includes(data.name)) {
+                cardBtnDoc.style.display = 'inline-block';
+                if (data.docLink) {
+                    cardBtnDoc.onclick = () => {
+                        window.open(data.docLink, '_blank');
+                    };
+                } else {
+                    cardBtnDoc.onclick = () => {
+                        alert('技术文档即将上线');
+                    };
+                }
+            } else {
+                cardBtnDoc.style.display = 'none';
+            }
+
+            // 显示卡片和遮罩（transform 已由 message 监听器实时更新）
+            projectCard.classList.add('visible');
+            cardOverlay.classList.add('visible');
+        }
+        
+        // 隐藏项目卡片
+        function hideProjectCard() {
+            projectCard.classList.remove('visible');
+            cardOverlay.classList.remove('visible');
+        }
+        
+        // 关闭按钮事件
+        cardBtnClose.addEventListener('click', hideProjectCard);
+        cardOverlay.addEventListener('click', hideProjectCard);
+        
+        // ESC键关闭卡片
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                hideProjectCard();
+            }
+        });
 
         function updateTooltip(node) {
+            // 旧的tooltip已禁用，使用新的卡片系统
             if (node && node.userData.hasWork) {
-                const name = currentLang === 'zh' ? node.userData.name : node.userData.nameEn;
-                const desc = currentLang === 'zh' ? node.userData.description : node.userData.descriptionEn;
-                tooltip.innerHTML = `
-                    <h3>${name}</h3>
-                    <p>${desc}</p>
-                `;
-                tooltip.style.opacity = '1';
+                showProjectCard(node);
             } else {
-                tooltip.style.opacity = '0';
+                hideProjectCard();
             }
         }
         
@@ -500,6 +1113,12 @@
                 if (hoveredNode) {
                     updateTooltip(hoveredNode);
                 }
+                // 更新所有节点标签文字
+                networkNodes.forEach(node => {
+                    if (node.userData.labelContent && node.userData.hasWork) {
+                        node.userData.labelContent.textContent = currentLang === 'zh' ? node.userData.name : node.userData.nameEn;
+                    }
+                });
             }
         });
 
@@ -587,11 +1206,15 @@
         let touchStartY = 0;
         let touchStartX = 0;
         let isTouchInSphere = false;
+        let touchMoved = false;
+        let touchStartTime = 0;
         
         renderer.domElement.addEventListener('touchstart', (event) => {
             if (event.touches.length === 1) {
                 touchStartY = event.touches[0].clientY;
                 touchStartX = event.touches[0].clientX;
+                touchStartTime = Date.now();
+                touchMoved = false;
                 
                 // 检查触摸是否在球体内
                 const rect = renderer.domElement.getBoundingClientRect();
@@ -603,19 +1226,23 @@
                 const intersections = raycaster.ray.intersectSphere(intersectSphere, new THREE.Vector3());
                 isTouchInSphere = intersections !== null;
                 
-                // 处理节点点击
+                // 如果触摸在球体内，显示 tooltip
                 if (isTouchInSphere) {
                     raycaster.setFromCamera(new THREE.Vector2(touchX, touchY), camera);
                     const intersects = raycaster.intersectObjects(networkNodes);
                     
                     if (intersects.length > 0) {
                         const node = intersects[0].object;
-                        if (node.userData.hasWork && node.userData.link) {
-                            // 通知父页面跳转
-                            window.parent.postMessage({
-                                type: 'navigate',
-                                url: node.userData.link
-                            }, '*');
+                        if (node.userData.hasWork) {
+                            hoveredNode = node;
+                            updateTooltip(node);
+                            node.material.size = 0.823;
+                            node.material.opacity = 2.5;
+                            
+                            // 设置 tooltip 位置
+                            const touch = event.touches[0];
+                            tooltip.style.left = (touch.clientX + 15) + 'px';
+                            tooltip.style.top = (touch.clientY + 15) + 'px';
                         }
                     }
                 }
@@ -629,16 +1256,68 @@
                 const deltaY = touchStartY - touchY;
                 const deltaX = touchStartX - touchX;
                 
-                // 如果触摸不在球体内，或者滑动距离较大，允许父页面滚动
-                if (!isTouchInSphere || Math.abs(deltaY) > 10) {
-                    // 不阻止默认行为，让父页面处理滚动
+                // 标记为已移动
+                if (Math.abs(deltaY) > 5 || Math.abs(deltaX) > 5) {
+                    touchMoved = true;
+                }
+                
+                // 更新 tooltip 位置
+                if (hoveredNode && isTouchInSphere) {
+                    tooltip.style.left = (event.touches[0].clientX + 15) + 'px';
+                    tooltip.style.top = (event.touches[0].clientY + 15) + 'px';
+                }
+                
+                // 如果触摸不在球体内，允许父页面滚动
+                if (!isTouchInSphere) {
                     return;
                 }
                 
-                // 在球体内处理旋转
-                event.preventDefault();
+                // 在球体内且垂直滑动较大时，允许父页面滚动
+                if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 30) {
+                    // 隐藏 tooltip
+                    if (hoveredNode) {
+                        if (hoveredNode.userData.hasWork) {
+                            hoveredNode.material.size = 0.588;
+                            hoveredNode.material.opacity = 2.0;
+                        }
+                        hoveredNode = null;
+                        updateTooltip(null);
+                    }
+                    return;
+                }
+                
+                // 在球体内水平滑动时，阻止默认行为（用于旋转模型）
+                if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                    event.preventDefault();
+                }
             }
         }, { passive: false });
+        
+        renderer.domElement.addEventListener('touchend', (event) => {
+            const touchDuration = Date.now() - touchStartTime;
+            
+            // 如果是点击（未移动且时间短），处理跳转
+            if (!touchMoved && touchDuration < 300 && hoveredNode && isTouchInSphere) {
+                if (hoveredNode.userData.hasWork && hoveredNode.userData.link) {
+                    window.parent.postMessage({
+                        type: 'navigate',
+                        url: hoveredNode.userData.link
+                    }, '*');
+                }
+            }
+            
+            // 延迟隐藏 tooltip
+            setTimeout(() => {
+                if (hoveredNode) {
+                    if (hoveredNode.userData.hasWork) {
+                        hoveredNode.material.size = 0.588;
+                        hoveredNode.material.opacity = 2.0;
+                    }
+                    hoveredNode = null;
+                    updateTooltip(null);
+                }
+            }, 2000);
+        });
 
         // ===== 窗口自适应 =====
         window.addEventListener('resize', () => {
@@ -765,6 +1444,42 @@
             
             // 背景粒子旋转速度与中心粒子模型一致
             bgParticles.rotation.y = time * 0.1;
+            
+            // 更新节点标签位置和大小
+            networkNodes.forEach((node, i) => {
+                if (node.userData.labelElement) {
+                    // 获取节点当前的缩放值（与节点脉冲动画同步）
+                    const pulse = 1 + Math.sin(time * 2 + i) * 0.05;
+                    const scale = Math.max(0.85, Math.min(1.15, pulse));
+                    
+                    // 计算节点的实际世界坐标（包含缩放）
+                    // 使用 node.matrixWorld 获取世界变换矩阵
+                    const worldPosition = new THREE.Vector3();
+                    node.getWorldPosition(worldPosition);
+                    
+                    // 将世界坐标投影到屏幕
+                    const vector = worldPosition.clone();
+                    vector.project(camera);
+                    
+                    const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+                    const y = (-vector.y * 0.5 + 0.5) * window.innerHeight;
+                    
+                    // 检查是否在屏幕内且在球体前方
+                    if (vector.z < 1 && x > 0 && x < window.innerWidth && y > 0 && y < window.innerHeight) {
+                        const labelEl = node.userData.labelElement;
+                        const contentEl = node.userData.labelContent;
+                        
+                        // 容器直接定位在节点位置（箭头起点）
+                        // 标签内容向右延伸
+                        labelEl.style.left = x + 'px';
+                        labelEl.style.top = (y - contentEl.offsetHeight * scale / 2) + 'px';
+                        labelEl.style.transform = `scale(${scale})`;
+                        labelEl.style.opacity = '0.95';
+                    } else {
+                        node.userData.labelElement.style.opacity = '0';
+                    }
+                }
+            });
             
             renderer.render(scene, camera);
         }
